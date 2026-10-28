@@ -1,0 +1,13 @@
+[package]
+name = "hex_dump_derive"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+quote = "*"
+syn = { version = "*", features = ["extra-traits"]}
+proc-macro2 = "*"
+hex_dump_core = { path = "../hex_dump_core/"}
+
+[lib]
+proc-macro = true
