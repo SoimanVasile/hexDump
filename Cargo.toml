@@ -1,7 +1,16 @@
 [package]
-name = "hexDump"
+name = "hex_dump"
 version = "0.1.0"
 edition = "2024"
+author = "SoimanVasile"
+
+[lib]
+name = "hex_dump"
+path = "src/lib.rs"
+proc-macro = true
+
 
 [dependencies]
-clap = { version= "4.6.7", features = ["derive"]}
+hexDump_derive = {path = "hex_dump_derive"}
+hexDump_core = {path = "hex_dump_core"}
+
