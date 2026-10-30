@@ -11,6 +11,10 @@ proc-macro = true
 
 
 [dependencies]
-hexDump_derive = {path = "hex_dump_derive"}
-hexDump_core = {path = "hex_dump_core"}
+hex_dump_derive = {path = "hex_dump_derive"}
+hex_dump_core = {path = "hex_dump_core"}
+trybuild = "1.0.122"
+expand = "0.3.0"
 
+[dev-dependencies]
+bytemuck = "1.19"
