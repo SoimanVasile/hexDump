@@ -30,12 +30,14 @@ fn impl_hex_dump_macro(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
         _ => return Err(syn::Error::new_spanned(&input.ident, "HexDump can only be derived foer structs!"))
     };
 
-
+    
+    let mut offset: usize = 0;
     let entries = fields
         .iter()
         .map(|field| -> syn::Result<proc_macro2::TokenStream> {
             let ident = field.ident.as_ref().unwrap();
             let ty = &field.ty;
+            let size;
 
             let primitive_type = match ty {
                 Type::Path(p) => p
@@ -48,25 +50,26 @@ fn impl_hex_dump_macro(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
             };
 
             let struct_type = match primitive_type.as_str() {
-                "u8"  => quote! { ::hex_dump_core::struct_type::StructType::U8 },
-                "u16" => quote! { ::hex_dump_core::struct_type::StructType::U16 },
-                "u32" => quote! { ::hex_dump_core::struct_type::StructType::U32 },
-                "u64" => quote! { ::hex_dump_core::struct_type::StructType::U64 },
-                "i8"  => quote! { ::hex_dump_core::struct_type::StructType::I8 },
-                "i16" => quote! { ::hex_dump_core::struct_type::StructType::I16 },
-                "i32" => quote! { ::hex_dump_core::struct_type::StructType::I32 },
-                "i64" => quote! { ::hex_dump_core::struct_type::StructType::I64 },
-                "f32" => quote! { ::hex_dump_core::struct_type::StructType::F32 },
-                "f64" => quote! { ::hex_dump_core::struct_type::StructType::F64 },
+                "u8"  => { size = 1; quote! { ::hex_dump_core::struct_type::StructType::U8 }} ,
+                "u16" => { size = 2; quote! { ::hex_dump_core::struct_type::StructType::U16 }},
+                "u32" => { size = 4; quote! { ::hex_dump_core::struct_type::StructType::U32 }},
+                "u64" => { size = 8; quote! { ::hex_dump_core::struct_type::StructType::U64 }},
+                "i8"  => { size = 1; quote! { ::hex_dump_core::struct_type::StructType::I8 }},
+                "i16" => { size = 2; quote! { ::hex_dump_core::struct_type::StructType::I16 }},
+                "i32" => { size = 4; quote! { ::hex_dump_core::struct_type::StructType::I32 }},
+                "i64" => { size = 8; quote! { ::hex_dump_core::struct_type::StructType::I64 }},
+                "f32" => { size = 4; quote! { ::hex_dump_core::struct_type::StructType::F32 }},
+                "f64" => { size = 8; quote! { ::hex_dump_core::struct_type::StructType::F64 }},
                 _ => return Err(syn::Error::new_spanned(ty, "unsupported field type")),
             };
 
+            offset += size;
+            
             Ok(quote! {
                 ::hex_dump_core::hex_dump_field_info::FieldInfo {
                     name: stringify!(#ident),
                     type_field: #struct_type,
-                    offset: ::core::mem::offset_of!(Self, #ident),
-                    size: ::core::mem::size_of::<#ty>(),
+                    offset: #offset - #size,
                 }
             })
         })
@@ -77,7 +80,7 @@ fn impl_hex_dump_macro(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
         unsafe impl ::bytemuck::Zeroable for #name{}
         unsafe impl ::bytemuck::Pod for #name{}
 
-        impl ::hex_dump_core::HexDump for #name{
+        impl ::hex_dump_core::hex_dump_trait::HexDump for #name{
             const FIELDS: &'static [::hex_dump_core::hex_dump_field_info::FieldInfo] = &[
                 #(#entries),*
             ];
